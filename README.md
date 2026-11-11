@@ -23,3 +23,7 @@ Open `index.html` in a browser, or serve the folder:
 ```bash
 python3 -m http.server 8080
 ```
+
+## Visitor feedback
+
+A floating **Feedback** button (bottom-right) captures the visitor's screen with html2canvas, lets them draw on it, and sends the annotated PNG plus a comment to Supabase (project `site-feedback`): screenshots go to the private `feedback-screenshots` bucket, rows to `public.site_feedback`. The page only holds the public publishable key; visitors can insert but never read. An `AFTER INSERT` trigger POSTs each new row to the webhook URL stored in Supabase Vault. See `supabase/site_feedback.sql`.

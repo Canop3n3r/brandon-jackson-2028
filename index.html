@@ -700,6 +700,136 @@
       .hero-actions { width: 100%; }
       .hero-actions .btn { flex: 1 1 180px; max-width: none; }
     }
+  
+    /* ===== Visitor feedback widget ===== */
+    .fb-btn {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 2147483000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      min-height: 48px;
+      border: 2px solid var(--black);
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--black);
+      font: 600 15px/1 "Outfit", system-ui, sans-serif;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 0 0 2px var(--gold), 0 10px 28px rgba(0, 0, 0, 0.55);
+      transition: transform 0.2s var(--ease), background 0.2s;
+    }
+    .fb-btn:hover { transform: translateY(-2px); background: var(--gold-soft); }
+    .fb-btn:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+    .fb-btn svg { width: 20px; height: 20px; flex: none; }
+    .fb-btn[disabled] { opacity: 0.75; cursor: progress; }
+    @media (max-width: 480px) {
+      .fb-btn { padding: 12px 14px; font-size: 14px; }
+    }
+    .fb-hide-for-capture { visibility: hidden !important; }
+
+    .fb-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.78);
+    }
+    .fb-modal[hidden] { display: none; }
+    .fb-dialog {
+      width: min(920px, 100%);
+      max-height: calc(100dvh - 32px);
+      overflow: auto;
+      background: var(--charcoal);
+      color: var(--cream);
+      border: 1px solid var(--gold-line);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      font-family: "Outfit", system-ui, sans-serif;
+    }
+    .fb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .fb-title { font-family: "Bebas Neue", sans-serif; font-size: 30px; letter-spacing: 0.04em; color: var(--gold); line-height: 1; }
+    .fb-close {
+      width: 40px; height: 40px; flex: none;
+      border: 1px solid var(--gold-line); border-radius: 50%;
+      background: transparent; color: var(--cream); font-size: 22px; line-height: 1; cursor: pointer;
+    }
+    .fb-close:hover { border-color: var(--gold); color: var(--gold); }
+    .fb-sub { color: var(--cream-muted); font-size: 14px; margin-bottom: 12px; }
+    .fb-stage {
+      position: relative;
+      background: var(--black);
+      border: 1px solid var(--gold-line);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+    .fb-canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 52dvh;
+      width: auto;
+      height: auto;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .fb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 14px; }
+    .fb-swatch {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2px solid var(--charcoal); box-shadow: 0 0 0 2px var(--muted);
+      cursor: pointer;
+    }
+    .fb-swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--gold); }
+    .fb-tool {
+      min-height: 34px; padding: 6px 14px;
+      border: 1px solid var(--gold-line); border-radius: 999px;
+      background: transparent; color: var(--cream); font: 500 14px "Outfit", sans-serif; cursor: pointer;
+    }
+    .fb-tool:hover { border-color: var(--gold); color: var(--gold); }
+    .fb-tools .fb-spacer { flex: 1; }
+    .fb-hint { color: var(--muted); font-size: 13px; }
+    .fb-note {
+      padding: 12px 14px; margin-bottom: 12px;
+      border: 1px dashed var(--gold-line); border-radius: 10px;
+      color: var(--cream-muted); font-size: 14px;
+    }
+    .fb-label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .fb-textarea {
+      width: 100%; min-height: 96px; resize: vertical;
+      padding: 12px; border-radius: 10px;
+      border: 1px solid var(--gold-line); background: var(--ink); color: var(--cream);
+      font: 400 16px/1.45 "Outfit", system-ui, sans-serif;
+    }
+    .fb-textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .fb-count { text-align: right; color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .fb-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 12px; }
+    .fb-status { flex: 1 1 200px; font-size: 14px; min-height: 1.2em; }
+    .fb-status.is-error { color: #ff8a80; }
+    .fb-status.is-ok { color: var(--gold); }
+    .fb-submit {
+      min-height: 44px; padding: 10px 22px;
+      border: none; border-radius: 999px;
+      background: var(--gold); color: var(--black);
+      font: 700 15px "Outfit", sans-serif; letter-spacing: 0.03em; cursor: pointer;
+    }
+    .fb-submit[disabled] { opacity: 0.6; cursor: progress; }
+    .fb-done { text-align: center; padding: 28px 8px 12px; }
+    .fb-done .fb-title { font-size: 40px; margin-bottom: 8px; }
+    .fb-done p { color: var(--cream-muted); margin-bottom: 18px; }
+    @media (max-width: 600px) {
+      .fb-modal { padding: 0; align-items: stretch; }
+      .fb-dialog { max-height: 100dvh; height: 100dvh; border-radius: 0; padding: 16px; }
+      .fb-canvas { max-height: 42dvh; }
+      .fb-title { font-size: 26px; }
+    }
   </style>
 </head>
 <body>
@@ -1095,6 +1225,328 @@
           e.preventDefault();
         });
       }
+    })();
+  </script>
+
+  <!-- ===== Visitor feedback widget ===== -->
+  <div id="fb-root">
+    <button type="button" id="fb-btn" class="fb-btn" aria-label="Feedback" aria-haspopup="dialog" aria-controls="fb-modal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>
+      <span>Feedback</span>
+    </button>
+    <div id="fb-modal" class="fb-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" hidden>
+      <div class="fb-dialog">
+        <div class="fb-head">
+          <h2 class="fb-title" id="fb-title">Send feedback</h2>
+          <button type="button" class="fb-close" id="fb-close" aria-label="Close feedback">&times;</button>
+        </div>
+        <form id="fb-form" novalidate>
+          <div id="fb-draw-wrap">
+            <p class="fb-sub">Here’s a snapshot of your screen. Draw on it to circle what needs fixing.</p>
+            <div class="fb-stage"><canvas id="fb-canvas" class="fb-canvas" aria-label="Screenshot of the page. Draw on it to mark what needs fixing."></canvas></div>
+            <div class="fb-tools" role="toolbar" aria-label="Drawing tools">
+              <button type="button" class="fb-swatch" data-color="#FF2D2D" aria-label="Red pen" aria-pressed="true" style="background:#FF2D2D"></button>
+              <button type="button" class="fb-swatch" data-color="#FED105" aria-label="Gold pen" aria-pressed="false" style="background:#FED105"></button>
+              <button type="button" class="fb-swatch" data-color="#2FA8FF" aria-label="Blue pen" aria-pressed="false" style="background:#2FA8FF"></button>
+              <button type="button" class="fb-swatch" data-color="#FFFFFF" aria-label="White pen" aria-pressed="false" style="background:#FFFFFF"></button>
+              <button type="button" class="fb-tool" id="fb-undo">Undo</button>
+              <button type="button" class="fb-tool" id="fb-clear">Clear</button>
+              <span class="fb-spacer"></span>
+              <span class="fb-hint">Mouse or finger</span>
+            </div>
+          </div>
+          <p class="fb-note" id="fb-nocap" hidden>We couldn’t capture your screen, but you can still send us a comment.</p>
+          <label class="fb-label" for="fb-comment">What should we fix?</label>
+          <textarea id="fb-comment" class="fb-textarea" maxlength="2000" required placeholder="Tell us what looks wrong or what you’d change…"></textarea>
+          <div class="fb-count"><span id="fb-count">0</span>/2000</div>
+          <div class="fb-actions">
+            <p class="fb-status" id="fb-status" role="status" aria-live="polite"></p>
+            <button type="submit" class="fb-submit" id="fb-submit">Send feedback</button>
+          </div>
+        </form>
+        <div class="fb-done" id="fb-done" hidden>
+          <h2 class="fb-title">Thank you!</h2>
+          <p>Your feedback was sent to the campaign team.</p>
+          <button type="button" class="fb-submit" id="fb-done-close">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      "use strict";
+      var SUPABASE_URL = "https://jhduhnrtvbvfsgdfpymx.supabase.co";
+      var SUPABASE_KEY = "sb_publishable_eUeDxoX4niYPSO1XaXBgqA_piW6PuZ3"; // public publishable key (insert-only via RLS)
+      var BUCKET = "feedback-screenshots";
+      var SITE = "brandon-jackson-2028";
+      var LIBS = {
+        html2canvas: { src: "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js", sri: "sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" },
+        supabase: { src: "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js", sri: "sha384-gnyZit14c5lnGcarmA166QQjjJXpucw25ogZXuwH3HxxY904zHkBqmxVpelsPorb" }
+      };
+      var MAX_W = 1600;
+      var MAX_BYTES = 4.8 * 1024 * 1024;
+
+      var root = document.getElementById("fb-root");
+      var btn = document.getElementById("fb-btn");
+      var modal = document.getElementById("fb-modal");
+      var form = document.getElementById("fb-form");
+      var canvas = document.getElementById("fb-canvas");
+      var ctx = canvas.getContext("2d");
+      var drawWrap = document.getElementById("fb-draw-wrap");
+      var noCap = document.getElementById("fb-nocap");
+      var comment = document.getElementById("fb-comment");
+      var count = document.getElementById("fb-count");
+      var statusEl = document.getElementById("fb-status");
+      var submit = document.getElementById("fb-submit");
+      var done = document.getElementById("fb-done");
+      var swatches = root.querySelectorAll(".fb-swatch");
+
+      var loaded = {};
+      var base = null;       // captured screenshot canvas
+      var strokes = [];
+      var current = null;
+      var color = "#FF2D2D";
+      var lastFocus = null;
+      var client = null;
+
+      function loadLib(name) {
+        if (loaded[name]) return loaded[name];
+        loaded[name] = new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          s.src = LIBS[name].src;
+          s.integrity = LIBS[name].sri;
+          s.crossOrigin = "anonymous";
+          s.async = true;
+          s.onload = function () { resolve(); };
+          s.onerror = function () { loaded[name] = null; reject(new Error("Could not load " + name)); };
+          document.head.appendChild(s);
+        });
+        return loaded[name];
+      }
+
+      function setStatus(msg, kind) {
+        statusEl.textContent = msg || "";
+        statusEl.className = "fb-status" + (kind ? " is-" + kind : "");
+      }
+
+      function viewportStr() {
+        return window.innerWidth + "x" + window.innerHeight + "@" + (window.devicePixelRatio || 1);
+      }
+
+      async function capture() {
+        await loadLib("html2canvas");
+        var w = window.innerWidth, h = window.innerHeight;
+        var scale = Math.min(window.devicePixelRatio || 1, 2, MAX_W / w);
+        var htmlStyle = document.documentElement.style;
+        var prevBehavior = htmlStyle.scrollBehavior;
+        htmlStyle.scrollBehavior = "auto"; // smooth scrolling breaks html2canvas's scroll offset
+        root.classList.add("fb-hide-for-capture");
+        try {
+          return await window.html2canvas(document.body, {
+            x: window.scrollX,
+            y: window.scrollY,
+            width: w,
+            height: h,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: h,
+            scale: scale,
+            useCORS: true,
+            logging: false,
+            backgroundColor: getComputedStyle(document.body).backgroundColor || "#0B0B0B",
+            ignoreElements: function (el) { return el.id === "fb-root"; }
+          });
+        } finally {
+          root.classList.remove("fb-hide-for-capture");
+          htmlStyle.scrollBehavior = prevBehavior;
+        }
+      }
+
+      function penWidth() { return Math.max(3, Math.round(canvas.width / 220)); }
+
+      function redraw() {
+        if (!base) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(base, 0, 0);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        strokes.forEach(function (s) {
+          ctx.strokeStyle = s.color;
+          ctx.fillStyle = s.color;
+          ctx.lineWidth = s.width;
+          if (s.points.length === 1) {
+            ctx.beginPath();
+            ctx.arc(s.points[0][0], s.points[0][1], s.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+            return;
+          }
+          ctx.beginPath();
+          ctx.moveTo(s.points[0][0], s.points[0][1]);
+          for (var i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i][0], s.points[i][1]);
+          ctx.stroke();
+        });
+      }
+
+      function pos(e) {
+        var r = canvas.getBoundingClientRect();
+        return [(e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height)];
+      }
+
+      canvas.addEventListener("pointerdown", function (e) {
+        if (!base) return;
+        e.preventDefault();
+        canvas.setPointerCapture(e.pointerId);
+        current = { color: color, width: penWidth(), points: [pos(e)] };
+        strokes.push(current);
+        redraw();
+      });
+      canvas.addEventListener("pointermove", function (e) {
+        if (!current) return;
+        e.preventDefault();
+        current.points.push(pos(e));
+        redraw();
+      });
+      function endStroke() { current = null; }
+      canvas.addEventListener("pointerup", endStroke);
+      canvas.addEventListener("pointercancel", endStroke);
+      canvas.addEventListener("lostpointercapture", endStroke);
+
+      swatches.forEach(function (b) {
+        b.addEventListener("click", function () {
+          color = b.getAttribute("data-color");
+          swatches.forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+        });
+      });
+      document.getElementById("fb-undo").addEventListener("click", function () { strokes.pop(); redraw(); });
+      document.getElementById("fb-clear").addEventListener("click", function () { strokes = []; redraw(); });
+
+      comment.addEventListener("input", function () {
+        count.textContent = String(comment.value.length);
+        if (statusEl.classList.contains("is-error")) setStatus("");
+      });
+
+      function resetForm() {
+        strokes = []; current = null; base = null;
+        comment.value = ""; count.textContent = "0";
+        setStatus("");
+        submit.disabled = false;
+        form.hidden = false;
+        done.hidden = true;
+      }
+
+      async function openFeedback() {
+        if (!modal.hidden) return;
+        lastFocus = document.activeElement;
+        resetForm();
+        btn.disabled = true;
+        var shot = null;
+        try { shot = await capture(); } catch (err) { shot = null; if (window.console) console.warn("Feedback capture failed", err); }
+        btn.disabled = false;
+        if (shot && shot.width && shot.height) {
+          base = shot;
+          canvas.width = shot.width;
+          canvas.height = shot.height;
+          redraw();
+          drawWrap.hidden = false;
+          noCap.hidden = true;
+        } else {
+          drawWrap.hidden = true;
+          noCap.hidden = false;
+        }
+        modal.hidden = false;
+        modal.querySelector(".fb-dialog").scrollTop = 0;
+        document.documentElement.style.overflow = "hidden";
+        setTimeout(function () { comment.focus({ preventScroll: true }); }, 30);
+        loadLib("supabase").catch(function () {});
+      }
+
+      function closeFeedback() {
+        modal.hidden = true;
+        document.documentElement.style.overflow = "";
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+
+      function toBlob(type, quality) {
+        return new Promise(function (resolve) { canvas.toBlob(resolve, type, quality); });
+      }
+
+      async function annotatedImage() {
+        var blob = await toBlob("image/png");
+        if (blob && blob.size <= MAX_BYTES) return { blob: blob, ext: "png", type: "image/png" };
+        var q = [0.85, 0.7, 0.55];
+        for (var i = 0; i < q.length; i++) {
+          blob = await toBlob("image/jpeg", q[i]);
+          if (blob && blob.size <= MAX_BYTES) return { blob: blob, ext: "jpg", type: "image/jpeg" };
+        }
+        return null;
+      }
+
+      function uuid() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+          var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16);
+        });
+      }
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var text = comment.value.trim();
+        if (!text) { setStatus("Please add a comment so we know what to fix.", "error"); comment.focus(); return; }
+        submit.disabled = true;
+        setStatus("Sending…");
+        try {
+          await loadLib("supabase");
+          if (!client) {
+            client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+              auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+            });
+          }
+          var path = null;
+          var uploadFailed = false;
+          if (base) {
+            var img = await annotatedImage();
+            if (img) {
+              var p = new Date().toISOString().slice(0, 10) + "/" + uuid() + "." + img.ext;
+              var up = await client.storage.from(BUCKET).upload(p, img.blob, { contentType: img.type, upsert: false });
+              if (up.error) { uploadFailed = true; if (window.console) console.warn("Screenshot upload failed", up.error); }
+              else path = p;
+            } else { uploadFailed = true; }
+          }
+          var ins = await client.from("site_feedback").insert({
+            site: SITE,
+            page_url: location.href.slice(0, 2000),
+            viewport: viewportStr(),
+            user_agent: (navigator.userAgent || "").slice(0, 1000),
+            comment: text.slice(0, 2000),
+            screenshot_path: path
+          });
+          if (ins.error) throw ins.error;
+          form.hidden = true;
+          done.hidden = false;
+          if (uploadFailed) done.querySelector("p").textContent = "Your comment was sent (the screenshot couldn’t be attached).";
+          else done.querySelector("p").textContent = "Your feedback was sent to the campaign team.";
+          document.getElementById("fb-done-close").focus();
+        } catch (err) {
+          if (window.console) console.error("Feedback submit failed", err);
+          setStatus("Sorry, that didn’t send. Please check your connection and try again.", "error");
+          submit.disabled = false;
+        }
+      });
+
+      btn.addEventListener("click", openFeedback);
+      document.getElementById("fb-close").addEventListener("click", closeFeedback);
+      document.getElementById("fb-done-close").addEventListener("click", closeFeedback);
+      modal.addEventListener("click", function (e) { if (e.target === modal) closeFeedback(); });
+      document.addEventListener("keydown", function (e) {
+        if (modal.hidden) return;
+        if (e.key === "Escape") { closeFeedback(); return; }
+        if (e.key === "Tab") {
+          var f = Array.prototype.filter.call(modal.querySelectorAll("button, textarea, [tabindex]:not([tabindex='-1'])"), function (el) { return !el.disabled && el.offsetParent !== null; });
+          if (!f.length) return;
+          var first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      });
     })();
   </script>
 </body>
