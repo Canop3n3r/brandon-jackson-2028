@@ -480,6 +480,24 @@
     }
     .form-success.is-visible { display: block; }
     .form.is-sent .form-fields { display: none; }
+    .form-error {
+      display: none;
+      border: 1px solid #c45c4a;
+      background: rgba(196, 92, 74, 0.16);
+      padding: 16px 20px;
+      color: var(--cream);
+      margin-bottom: 18px;
+    }
+    .form-error.is-visible { display: block; }
+    .form-honey {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    .form { position: relative; }
+    .form button[disabled] { opacity: 0.7; cursor: progress; }
 
     /* ——— Donate ——— */
     .donate {
@@ -989,12 +1007,21 @@
           <h2>This nomination is a ground game</h2>
           <p class="lede">Libertarian nominations are won by people who show up — at state conventions, on phones, and in their own communities. If you want to help, leave a note below.</p>
         </div>
-        <!-- Volunteer form: connect a campaign inbox or form service, then restore a real action. Submissions currently stay on-page only. -->
-        <form class="form" id="volunteer-form" action="#" method="post">
+        <form class="form" id="volunteer-form" action="https://formsubmit.co/brandonjackson178@gmail.com" method="post">
           <div class="form-success" id="form-success" role="status">
-            Thank you. Volunteer signup is opening soon — we appreciate your interest in helping the campaign.
+            Thank you. Your signup is on its way to the campaign, and we'll be in touch.
+          </div>
+          <div class="form-error" id="form-error" role="alert">
+            Sorry, we couldn't send your signup. Please try again in a moment.
           </div>
           <div class="form-fields">
+            <input type="hidden" name="_subject" value="New signup from jacksonforliberty.com">
+            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_captcha" value="false">
+            <div class="form-honey" aria-hidden="true">
+              <label for="website_hp">Leave this blank</label>
+              <input id="website_hp" type="text" name="_honey" tabindex="-1" autocomplete="off">
+            </div>
             <div class="form-row">
               <label for="name">Name</label>
               <input id="name" name="name" type="text" autocomplete="name" required>
@@ -1023,7 +1050,7 @@
               <textarea id="message" name="message"></textarea>
             </div>
             <button class="btn btn-solid" type="submit">I want to help</button>
-            <p class="form-note">Volunteer signup is opening soon. This form does not store your details yet.</p>
+            <p class="form-note">We'll use your details only to follow up about volunteering.</p>
           </div>
         </form>
       </div>
@@ -1079,11 +1106,63 @@
 
       const form = document.getElementById("volunteer-form");
       const success = document.getElementById("form-success");
+      const errorBox = document.getElementById("form-error");
+      const FORM_ENDPOINT = "https://formsubmit.co/ajax/brandonjackson178@gmail.com";
       if (form) {
         form.addEventListener("submit", function (e) {
           e.preventDefault();
-          form.classList.add("is-sent");
-          if (success) success.classList.add("is-visible");
+          if (errorBox) errorBox.classList.remove("is-visible");
+          if (typeof form.reportValidity === "function" && !form.reportValidity()) return;
+
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const payload = {};
+          const help = [];
+          new FormData(form).forEach(function (value, key) {
+            if (key === "help") help.push(value);
+            else payload[key] = value;
+          });
+          if (help.length) payload.help = help.join(", ");
+          if (payload.email) payload._replyto = payload.email;
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.setAttribute("aria-busy", "true");
+            if (!submitBtn.dataset.label) submitBtn.dataset.label = submitBtn.textContent;
+            submitBtn.textContent = "Sending…";
+          }
+
+          fetch(FORM_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+          })
+            .then(function (res) {
+              return res.text().then(function (text) {
+                var data = {};
+                try { data = text ? JSON.parse(text) : {}; } catch (err) { data = { message: text }; }
+                return { ok: res.ok, data: data };
+              });
+            })
+            .then(function (result) {
+              var data = result.data || {};
+              var succeeded = data.success === true || data.success === "true" ||
+                (result.ok && data.success !== false && data.success !== "false");
+              if (!succeeded) throw new Error(data.message || "Submit failed");
+              form.classList.add("is-sent");
+              if (success) success.classList.add("is-visible");
+              form.reset();
+            })
+            .catch(function () {
+              if (errorBox) errorBox.classList.add("is-visible");
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute("aria-busy");
+                submitBtn.textContent = submitBtn.dataset.label || "I want to help";
+              }
+            });
         });
       }
 
