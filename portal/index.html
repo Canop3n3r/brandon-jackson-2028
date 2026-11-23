@@ -280,12 +280,13 @@
             <div class="row tight">
               <button class="btn btn-small" id="signups-refresh" type="button">Refresh</button>
               <button class="btn btn-small btn-solid" id="signups-csv" type="button" disabled>Download CSV</button>
+              <button class="btn btn-small" id="signups-csv-list" type="button" disabled>Download email list CSV</button>
             </div>
           </div>
-          <p class="note">Volunteer signups from the site's "Get involved" form. Each one is still emailed to info@ as before. Signups sent before this tab went live are only in the info@ inbox, and message text stays in the email only.</p>
+          <p class="note">Volunteer signups from the site's "Get involved" form. Each one is still emailed to info@ as before. Signups sent before this tab went live are only in the info@ inbox, and message text stays in the email only. "Email list" shows who ticked the opt-in box; "Download email list CSV" exports just those people.</p>
           <div class="table-wrap">
             <table class="data" id="signups-table">
-              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>City / State</th><th>Interests</th></tr></thead>
+              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>City / State</th><th>Interests</th><th>Email list</th></tr></thead>
               <tbody id="signups-body"></tbody>
             </table>
           </div>
@@ -456,7 +457,7 @@
         setStatus(status, "Loading…");
         const { data, error } = await sb
           .from("signups")
-          .select("id, created_at, name, email, city_state, interests")
+          .select("id, created_at, name, email, city_state, interests, email_list")
           .order("created_at", { ascending: false })
           .limit(5000);
         if (error) { setStatus(status, "Couldn't load signups: " + error.message, "error"); return; }
@@ -465,7 +466,7 @@
         tbody.textContent = "";
         for (const r of signups) {
           const tr = document.createElement("tr");
-          const cells = [fmtDate(r.created_at), r.name, r.email, r.city_state || "", r.interests || ""];
+          const cells = [fmtDate(r.created_at), r.name, r.email, r.city_state || "", r.interests || "", r.email_list ? "Yes" : "No"];
           cells.forEach((v, i) => {
             const td = document.createElement("td");
             if (i === 0) td.className = "nowrap";
@@ -479,11 +480,14 @@
         }
         if (!signups.length) {
           const tr = document.createElement("tr"); const td = document.createElement("td");
-          td.colSpan = 5; td.className = "hint"; td.textContent = "No signups yet.";
+          td.colSpan = 6; td.className = "hint"; td.textContent = "No signups yet.";
           tr.appendChild(td); tbody.appendChild(tr);
         }
         $("signups-count").textContent = signups.length + (signups.length === 1 ? " signup" : " signups");
         $("signups-csv").disabled = !signups.length;
+        const optins = signups.filter(r => r.email_list).length;
+        $("signups-csv-list").disabled = !optins;
+        $("signups-count").textContent += " · " + optins + " on email list";
         setStatus(status, "");
       }
       function csvCell(v) {
@@ -491,20 +495,30 @@
         if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;  // keep spreadsheets from running formulas
         return '"' + s.replace(/"/g, '""') + '"';
       }
-      function downloadCsv() {
-        const head = ["Signed up (UTC)", "Name", "Email", "City / State", "Interests"];
+      function saveCsv(head, rows, filename) {
         const lines = [head.map(csvCell).join(",")];
-        for (const r of signups) lines.push([r.created_at, r.name, r.email, r.city_state, r.interests].map(csvCell).join(","));
+        for (const row of rows) lines.push(row.map(csvCell).join(","));
         const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "jackson-signups-" + new Date().toISOString().slice(0, 10) + ".csv";
+        a.download = filename + "-" + new Date().toISOString().slice(0, 10) + ".csv";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       }
+      function downloadCsv() {
+        saveCsv(["Signed up (UTC)", "Name", "Email", "City / State", "Interests", "Email list"],
+          signups.map(r => [r.created_at, r.name, r.email, r.city_state, r.interests, r.email_list ? "Yes" : "No"]),
+          "jackson-signups");
+      }
+      function downloadEmailListCsv() {
+        saveCsv(["Name", "Email", "City / State"],
+          signups.filter(r => r.email_list).map(r => [r.name, r.email, r.city_state]),
+          "jackson-email-list");
+      }
       $("signups-refresh").addEventListener("click", loadSignups);
       $("signups-csv").addEventListener("click", downloadCsv);
+      $("signups-csv-list").addEventListener("click", downloadEmailListCsv);
 
       // ——— Team ———
       async function loadTeam() {

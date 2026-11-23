@@ -109,3 +109,8 @@ end; $$;
 revoke all on function public.throttle_signups() from public, anon, authenticated;
 create trigger signups_throttle before insert on public.signups
   for each row execute function public.throttle_signups();
+
+-- ===== Email list opt-in (migration "signups_email_list_optin", 2026-11-23) =====
+alter table public.signups add column if not exists email_list boolean not null default false;
+grant insert (email_list) on table public.signups to anon, authenticated;
+comment on column public.signups.email_list is 'Volunteer opted in to the campaign email list via the site form checkbox.';

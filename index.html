@@ -498,6 +498,7 @@
     }
     .form { position: relative; }
     .form button[disabled] { opacity: 0.7; cursor: progress; }
+    .form .check-optin { margin-top: 4px; }
 
     /* ——— Donate ——— */
     .donate {
@@ -1055,6 +1056,9 @@
               <label for="message">Message</label>
               <textarea id="message" name="message"></textarea>
             </div>
+            <div class="form-row">
+              <label class="check check-optin"><input type="checkbox" id="email_list" name="email_list" value="Yes"> Add me to the campaign email list</label>
+            </div>
             <button class="btn btn-solid" type="submit">I want to help</button>
             <p class="form-note">We'll use your details only to follow up about volunteering.</p>
           </div>
@@ -1129,7 +1133,8 @@
             name: clip(payload.name, 120),
             email: clip(payload.email, 254).toLowerCase(),
             city_state: clip(payload.location, 120) || null,
-            interests: clip(payload.help, 300) || null
+            interests: clip(payload.help, 300) || null,
+            email_list: payload.email_list === "Yes"
           };
           if (!row.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return;
           fetch(SIGNUPS_URL, {
@@ -1159,6 +1164,7 @@
             else payload[key] = value;
           });
           if (help.length) payload.help = help.join(", ");
+          payload.email_list = payload.email_list === "Yes" ? "Yes" : "No";  // opt-in shown in the notification email too
           if (payload.email) payload._replyto = payload.email;
           saveSignupCopy(payload);
 
