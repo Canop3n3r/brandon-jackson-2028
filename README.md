@@ -10,11 +10,11 @@ https://jacksonforliberty.com/
 
 Before this is treated as an official campaign site, replace these:
 
-- **Volunteer form:** Submissions are emailed to the campaign through FormSubmit's AJAX endpoint. The first submission sends an activation email; Brandon needs to click Activate before further signups are delivered. After activation, FormSubmit also provides a random alias that can replace the visible address in the page source.
+- **Volunteer form:** Submissions are emailed to info@jacksonforliberty.com through FormSubmit's AJAX endpoint. The first submission to that address sends an activation email; someone with access to the inbox needs to click Activate before further signups are delivered. After activation, FormSubmit also provides a random alias that can replace the visible address in the page source.
 - **Donate button:** Labeled “Donations opening soon” and disabled. Link a donation processor (Anedot, WinRed, OpenCollective, or a campaign committee page) and remove the disabled state.
 - **Paid-for-by line:** Reads “Paid for by Brandon Jackson for President.” Confirm the official committee name and required FEC disclaimer language.
 - **Issue planks:** The six issue cards are starter Libertarian copy, not a confirmed personal platform. Edit them to match Brandon’s positions.
-- **Contact / social:** Facebook is linked from his public profile. Add official campaign email, additional social accounts, and any formal announcement copy when ready.
+- **Contact / social:** Campaign email is info@jacksonforliberty.com. Facebook is linked from his public profile. Add additional social accounts and any formal announcement copy when ready.
 
 ## Local preview
 
