@@ -1148,7 +1148,9 @@
             })
             .then(function (result) {
               var data = result.data || {};
-              var succeeded = data.success === true || data.success === "true" ||
+              var message = String(data.message || "");
+              var pendingActivation = /activat/i.test(message);
+              var succeeded = data.success === true || data.success === "true" || pendingActivation ||
                 (result.ok && data.success !== false && data.success !== "false");
               if (!succeeded) throw new Error(data.message || "Submit failed");
               form.classList.add("is-sent");
