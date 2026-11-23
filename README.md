@@ -18,7 +18,7 @@ Before this is treated as an official campaign site, replace these:
 
 ## Campaign portal
 
-`/portal/` is a private, noindexed page where the campaign team signs in with a one-time email link (Supabase Auth, no password) and chats with Aaron's assistant about site changes. Only allowlisted emails can sign in. Messages live in the Supabase table `public.portal_messages`, protected by Row Level Security; the page ships only the public anon key. Schema reference: `supabase/portal_messages.sql`.
+`/portal/` is a private, noindexed page where the campaign team signs in with a one-time email link (Supabase Auth, no password) and chats with Aaron's assistant about site changes. Only allowlisted emails can sign in. Messages live in the Supabase table `public.portal_messages`, protected by Row Level Security; the page ships only the public anon key. Tabs: **Chat** (requests to the assistant), **Signups** (volunteer signups with CSV download), and **Team** (who can sign in; Brandon's address and the last member can't be removed). The volunteer form still emails info@ through FormSubmit and also saves a copy (name, email, city/state, interests; no message text) to `public.signups`, which the public can insert into but not read. Schema reference: `supabase/portal_messages.sql` and `supabase/portal_team_signups.sql`.
 
 ## Local preview
 

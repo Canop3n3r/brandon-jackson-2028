@@ -1115,6 +1115,36 @@
       const success = document.getElementById("form-success");
       const errorBox = document.getElementById("form-error");
       const FORM_ENDPOINT = "https://formsubmit.co/ajax/info@jacksonforliberty.com";
+      // Copy of each signup for the campaign portal. Public anon key: insert-only, enforced by Row Level Security.
+      const SIGNUPS_URL = "https://jhduhnrtvbvfsgdfpymx.supabase.co/rest/v1/signups";
+      const SIGNUPS_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHVobnJ0dmJ2ZnNnZGZweW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNzk2MzMsImV4cCI6MjEwOTk1NTYzM30.9_bJCijaAZpgdmcLJXwB1N3jgiJ5XSQuRiOKyapgW08";
+      function clip(v, max) {
+        v = String(v == null ? "" : v).trim();
+        return v.length > max ? v.slice(0, max) : v;
+      }
+      function saveSignupCopy(payload) {
+        try {
+          if (String(payload._honey || "").trim()) return;  // honeypot filled: likely a bot
+          var row = {
+            name: clip(payload.name, 120),
+            email: clip(payload.email, 254).toLowerCase(),
+            city_state: clip(payload.location, 120) || null,
+            interests: clip(payload.help, 300) || null
+          };
+          if (!row.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return;
+          fetch(SIGNUPS_URL, {
+            method: "POST",
+            keepalive: true,
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": SIGNUPS_KEY,
+              "Authorization": "Bearer " + SIGNUPS_KEY,
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify(row)
+          }).catch(function () {});
+        } catch (err) { /* never block the email signup */ }
+      }
       if (form) {
         form.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -1130,6 +1160,7 @@
           });
           if (help.length) payload.help = help.join(", ");
           if (payload.email) payload._replyto = payload.email;
+          saveSignupCopy(payload);
 
           if (submitBtn) {
             submitBtn.disabled = true;

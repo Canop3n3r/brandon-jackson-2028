@@ -162,6 +162,37 @@
     .msg.brandon .meta { color: rgba(11, 11, 11, 0.62); }
     .msg.bot { align-self: flex-start; background: var(--charcoal); }
     .empty { color: var(--muted); text-align: center; margin: auto; font-size: 0.95rem; }
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 16px;
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .tab {
+      background: transparent; border: 0; border-bottom: 2px solid transparent;
+      padding: 0.6rem 1rem; margin-bottom: -1px;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--cream-muted);
+    }
+    .tab:hover { color: var(--cream); }
+    .tab[aria-selected="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .row.tight { margin-top: 0; gap: 8px; }
+    .table-wrap { overflow-x: auto; max-height: min(60vh, 560px); overflow-y: auto; border: 1px solid var(--gold-line); }
+    table.data { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    table.data th, table.data td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(254, 209, 5, 0.12); vertical-align: top; }
+    table.data th {
+      position: sticky; top: 0; background: var(--charcoal);
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-muted); font-weight: 600;
+    }
+    table.data td { word-break: break-word; }
+    table.data td.nowrap { white-space: nowrap; color: var(--cream-muted); }
+    .team { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .team li.member {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 10px 14px; border: 1px solid var(--gold-line); background: var(--charcoal);
+    }
+    .team .addr { word-break: break-all; }
+    .team .sub { font-size: 0.78rem; color: var(--muted); }
     .composer { border-top: 1px solid var(--gold-line); padding-top: 14px; }
     .hint { font-size: 0.78rem; color: var(--muted); }
 
@@ -216,12 +247,18 @@
     <!-- Signed-in view -->
     <section id="chat-view" hidden>
       <h1>Campaign Portal</h1>
-      <p class="lede">Request site changes and setup help here.</p>
+      <p class="lede">Request site changes, see signups, and manage team access.</p>
       <div class="panel">
         <div class="chat-head">
           <p class="who">Signed in as <strong id="who-email"></strong></p>
           <button class="btn btn-small" id="signout-btn" type="button">Sign out</button>
         </div>
+        <div class="tabs" role="tablist" aria-label="Portal sections">
+          <button class="tab" role="tab" id="tabbtn-chat" data-tab="chat" aria-controls="tab-chat" aria-selected="true">Chat</button>
+          <button class="tab" role="tab" id="tabbtn-signups" data-tab="signups" aria-controls="tab-signups" aria-selected="false" tabindex="-1">Signups</button>
+          <button class="tab" role="tab" id="tabbtn-team" data-tab="team" aria-controls="tab-team" aria-selected="false" tabindex="-1">Team</button>
+        </div>
+        <div class="tabpanel" id="tab-chat" role="tabpanel" aria-labelledby="tabbtn-chat">
         <p class="note">Aaron's assistant reads every message here and usually replies within a few minutes. It handles content changes (wording, issues, photos, events) and setup. Bigger changes, like code, payments, or keys, get a quick OK from Aaron first.</p>
         <div class="thread" id="thread" aria-live="polite" aria-label="Message history">
           <p class="empty" id="empty">Loading messages…</p>
@@ -235,6 +272,39 @@
           </div>
           <p class="status" id="send-status" role="status" aria-live="polite"></p>
         </form>
+        </div>
+
+        <div class="tabpanel" id="tab-signups" role="tabpanel" aria-labelledby="tabbtn-signups" hidden>
+          <div class="toolbar">
+            <p class="who" id="signups-count">Loading…</p>
+            <div class="row tight">
+              <button class="btn btn-small" id="signups-refresh" type="button">Refresh</button>
+              <button class="btn btn-small btn-solid" id="signups-csv" type="button" disabled>Download CSV</button>
+            </div>
+          </div>
+          <p class="note">Volunteer signups from the site's "Get involved" form. Each one is still emailed to info@ as before. Signups sent before this tab went live are only in the info@ inbox, and message text stays in the email only.</p>
+          <div class="table-wrap">
+            <table class="data" id="signups-table">
+              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>City / State</th><th>Interests</th></tr></thead>
+              <tbody id="signups-body"></tbody>
+            </table>
+          </div>
+          <p class="status" id="signups-status" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="tabpanel" id="tab-team" role="tabpanel" aria-labelledby="tabbtn-team" hidden>
+          <p class="note">People on this list can sign in to the portal with a one-time email link and see everything here. Brandon's address can't be removed.</p>
+          <ul class="team" id="team-list"><li class="hint">Loading…</li></ul>
+          <form id="team-form" class="composer" novalidate>
+            <label for="team-email">Add a team member's email</label>
+            <input id="team-email" type="email" autocomplete="off" placeholder="name@example.com" maxlength="254" required>
+            <div class="row">
+              <button class="btn btn-solid" id="team-add" type="submit">Add to team</button>
+            </div>
+            <p class="status" id="team-status" role="status" aria-live="polite"></p>
+            <p class="hint">After you add someone, they can go to jacksonforliberty.com/portal/ and request a login link.</p>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -252,7 +322,6 @@
       const SUPABASE_URL = "https://jhduhnrtvbvfsgdfpymx.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHVobnJ0dmJ2ZnNnZGZweW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNzk2MzMsImV4cCI6MjEwOTk1NTYzM30.9_bJCijaAZpgdmcLJXwB1N3jgiJ5XSQuRiOKyapgW08";
       const REDIRECT_URL = "https://jacksonforliberty.com/portal/";
-      const ALLOWED = ["brandonjackson178@gmail.com", "info@jacksonforliberty.com"];
       const POLL_MS = 5000;
 
       const $ = (id) => document.getElementById(id);
@@ -351,9 +420,146 @@
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       }
 
+      // ——— Tabs ———
+      const TABS = ["chat", "signups", "team"];
+      function selectTab(name) {
+        for (const t of TABS) {
+          const on = t === name;
+          const btn = $("tabbtn-" + t);
+          btn.setAttribute("aria-selected", String(on));
+          btn.tabIndex = on ? 0 : -1;
+          $("tab-" + t).hidden = !on;
+        }
+        if (name === "signups") loadSignups();
+        if (name === "team") loadTeam();
+        if (name === "chat") { const th = $("thread"); th.scrollTop = th.scrollHeight; }
+      }
+      document.querySelectorAll(".tab").forEach((btn) => {
+        btn.addEventListener("click", () => selectTab(btn.dataset.tab));
+        btn.addEventListener("keydown", (e) => {
+          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+          const i = TABS.indexOf(btn.dataset.tab);
+          const next = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+          selectTab(next);
+          $("tabbtn-" + next).focus();
+        });
+      });
+
+      // ——— Signups ———
+      let signups = [];
+      function fmtDate(iso) {
+        try { return new Date(iso).toLocaleString([], { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
+        catch (e) { return iso; }
+      }
+      async function loadSignups() {
+        const status = $("signups-status");
+        setStatus(status, "Loading…");
+        const { data, error } = await sb
+          .from("signups")
+          .select("id, created_at, name, email, city_state, interests")
+          .order("created_at", { ascending: false })
+          .limit(5000);
+        if (error) { setStatus(status, "Couldn't load signups: " + error.message, "error"); return; }
+        signups = data || [];
+        const tbody = $("signups-body");
+        tbody.textContent = "";
+        for (const r of signups) {
+          const tr = document.createElement("tr");
+          const cells = [fmtDate(r.created_at), r.name, r.email, r.city_state || "", r.interests || ""];
+          cells.forEach((v, i) => {
+            const td = document.createElement("td");
+            if (i === 0) td.className = "nowrap";
+            if (i === 2 && v) {
+              const a = document.createElement("a");
+              a.href = "mailto:" + v; a.textContent = v; td.appendChild(a);
+            } else td.textContent = v;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+        if (!signups.length) {
+          const tr = document.createElement("tr"); const td = document.createElement("td");
+          td.colSpan = 5; td.className = "hint"; td.textContent = "No signups yet.";
+          tr.appendChild(td); tbody.appendChild(tr);
+        }
+        $("signups-count").textContent = signups.length + (signups.length === 1 ? " signup" : " signups");
+        $("signups-csv").disabled = !signups.length;
+        setStatus(status, "");
+      }
+      function csvCell(v) {
+        let s = v == null ? "" : String(v);
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;  // keep spreadsheets from running formulas
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      function downloadCsv() {
+        const head = ["Signed up (UTC)", "Name", "Email", "City / State", "Interests"];
+        const lines = [head.map(csvCell).join(",")];
+        for (const r of signups) lines.push([r.created_at, r.name, r.email, r.city_state, r.interests].map(csvCell).join(","));
+        const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "jackson-signups-" + new Date().toISOString().slice(0, 10) + ".csv";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }
+      $("signups-refresh").addEventListener("click", loadSignups);
+      $("signups-csv").addEventListener("click", downloadCsv);
+
+      // ——— Team ———
+      async function loadTeam() {
+        const list = $("team-list");
+        const { data, error } = await sb.rpc("portal_list_team");
+        if (error) { setStatus($("team-status"), "Couldn't load the team list: " + error.message, "error"); return; }
+        list.textContent = "";
+        const me = ($("who-email").textContent || "").toLowerCase();
+        for (const m of data || []) {
+          const li = document.createElement("li"); li.className = "member";
+          const info = document.createElement("div");
+          const addr = document.createElement("div"); addr.className = "addr";
+          addr.textContent = m.email + (m.email === me ? " (you)" : "");
+          const sub = document.createElement("div"); sub.className = "sub";
+          sub.textContent = m.protected ? "Owner · can't be removed"
+            : m.last_sign_in_at ? "Last signed in " + fmtDate(m.last_sign_in_at) : "Hasn't signed in yet";
+          if (m.protected && m.last_sign_in_at) sub.textContent += " · last signed in " + fmtDate(m.last_sign_in_at);
+          info.append(addr, sub); li.appendChild(info);
+          if (!m.protected) {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-small"; btn.type = "button"; btn.textContent = "Remove";
+            btn.addEventListener("click", () => removeMember(m.email, btn));
+            li.appendChild(btn);
+          }
+          list.appendChild(li);
+        }
+      }
+      async function removeMember(email, btn) {
+        if (!confirm("Remove " + email + " from the portal? They'll lose access right away.")) return;
+        btn.disabled = true;
+        const { error } = await sb.rpc("portal_remove_team_email", { p_email: email });
+        if (error) { btn.disabled = false; setStatus($("team-status"), error.message, "error"); return; }
+        setStatus($("team-status"), email + " was removed.", "ok");
+        if (email === ($("who-email").textContent || "").toLowerCase()) { await sb.auth.signOut(); return; }
+        loadTeam();
+      }
+      $("team-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const input = $("team-email");
+        const email = input.value.trim().toLowerCase();
+        const status = $("team-status");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setStatus(status, "Enter a valid email address.", "error"); return; }
+        const btn = $("team-add"); btn.disabled = true;
+        const { error } = await sb.rpc("portal_add_team_email", { p_email: email });
+        btn.disabled = false;
+        if (error) { setStatus(status, "Couldn't add: " + error.message, "error"); return; }
+        input.value = "";
+        setStatus(status, email + " can now sign in at jacksonforliberty.com/portal/.", "ok");
+        loadTeam();
+      });
+
       function showLogin() {
         stopLive();
         seen.clear();
+        signups = [];
         $("chat-view").hidden = true;
         $("login-view").hidden = false;
         bootStatus.hidden = true;
@@ -365,10 +571,12 @@
         $("login-view").hidden = true;
         $("chat-view").hidden = false;
         bootStatus.hidden = true;
-        if (!ALLOWED.includes(email)) {
+        const { data: allowed } = await sb.rpc("is_portal_user");
+        if (allowed !== true) {
           setStatus($("send-status"), "This account isn't on the campaign team list.", "error");
           return;
         }
+        selectTab("chat");
         await loadMessages();
         startLive();
         // Remove auth tokens from the address bar after a magic-link sign-in.
@@ -385,10 +593,6 @@
         const email = $("email").value.trim().toLowerCase();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
           setStatus(status, "Enter a valid email address.", "error");
-          return;
-        }
-        if (!ALLOWED.includes(email)) {
-          setStatus(status, "That email isn't authorized for the campaign portal.", "error");
           return;
         }
         const btn = $("login-btn");
