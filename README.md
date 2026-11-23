@@ -2,9 +2,9 @@
 
 Campaign site for Brandon Jackson, seeking the Libertarian Party presidential nomination. Home base: California.
 
-This is a single-page static site (`index.html`). Live on GitHub Pages at:
+This is a single-page static site (`index.html`). Live at:
 
-https://canop3n3r.github.io/brandon-jackson-2028/
+https://jacksonforliberty.com/
 
 ## Placeholders still to fill in
 
