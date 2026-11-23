@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Campaign Portal | Brandon Jackson for President</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #FED105;
+      --gold-dim: rgba(254, 209, 5, 0.14);
+      --gold-line: rgba(254, 209, 5, 0.35);
+      --black: #0B0B0B;
+      --charcoal: #141414;
+      --panel: #191919;
+      --cream: #F7F3E6;
+      --cream-muted: #C9C3B0;
+      --muted: #8A8576;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Outfit", system-ui, sans-serif;
+      background: var(--black);
+      color: var(--cream);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--gold-line);
+      background: rgba(11, 11, 11, 0.92);
+    }
+    .nav-inner {
+      width: min(880px, calc(100% - 40px));
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .wordmark {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--cream);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 0.16em;
+      line-height: 1;
+    }
+    .wordmark:hover { color: var(--gold); text-decoration: none; }
+    .wordmark svg { width: 28px; height: 28px; }
+    .tag {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--gold);
+    }
+
+    main {
+      flex: 1;
+      width: min(880px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 48px 0 56px;
+    }
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-weight: 400;
+      font-size: clamp(2.6rem, 6vw, 3.8rem);
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    .lede {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-style: italic;
+      font-size: 1.35rem;
+      color: var(--cream-muted);
+      margin: 10px 0 28px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--gold-line);
+      padding: 28px;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--cream-muted);
+      margin-bottom: 8px;
+    }
+    input[type="email"], textarea {
+      width: 100%;
+      background: var(--black);
+      border: 1px solid var(--gold-line);
+      padding: 0.85rem 1rem;
+      color: var(--cream);
+      outline: none;
+    }
+    input[type="email"]:focus, textarea:focus { border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 88px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1.5px solid var(--gold);
+      padding: 0.85rem 1.5rem;
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: transparent; color: var(--gold);
+      line-height: 1;
+      transition: background 0.2s var(--ease), color 0.2s var(--ease);
+    }
+    .btn:hover { background: var(--gold); color: var(--black); }
+    .btn:disabled { opacity: 0.55; cursor: wait; }
+    .btn-solid { background: var(--gold); color: var(--black); }
+    .btn-solid:hover { background: var(--cream); border-color: var(--cream); }
+    .btn-small { padding: 0.55rem 0.9rem; font-size: 0.72rem; }
+    .btn:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 3px;
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+    .status { margin-top: 14px; font-size: 0.95rem; color: var(--cream-muted); min-height: 1.5em; }
+    .status.error { color: #ff8a7a; }
+    .status.ok { color: var(--gold); }
+
+    .chat-head {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--gold-line);
+      padding-bottom: 14px; margin-bottom: 14px;
+    }
+    .who { font-size: 0.9rem; color: var(--cream-muted); }
+    .who strong { color: var(--cream); font-weight: 500; }
+    .note {
+      font-size: 0.92rem; color: var(--cream-muted);
+      background: var(--gold-dim); border-left: 3px solid var(--gold);
+      padding: 10px 14px; margin-bottom: 16px;
+    }
+    .thread {
+      height: min(56vh, 520px);
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 4px 4px 12px;
+    }
+    .msg { max-width: 82%; padding: 10px 14px; border: 1px solid var(--gold-line); }
+    .msg .meta {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .msg .body { white-space: pre-wrap; word-wrap: break-word; }
+    .msg.brandon { align-self: flex-end; background: var(--gold); color: var(--black); border-color: var(--gold); }
+    .msg.brandon .meta { color: rgba(11, 11, 11, 0.62); }
+    .msg.bot { align-self: flex-start; background: var(--charcoal); }
+    .empty { color: var(--muted); text-align: center; margin: auto; font-size: 0.95rem; }
+    .composer { border-top: 1px solid var(--gold-line); padding-top: 14px; }
+    .hint { font-size: 0.78rem; color: var(--muted); }
+
+    footer {
+      border-top: 1px solid var(--gold-line);
+      padding: 24px 20px 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    @media (max-width: 560px) {
+      .panel { padding: 20px; }
+      .msg { max-width: 92%; }
+      .btn { width: 100%; }
+      .btn-small { width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="wordmark" href="/" aria-label="Back to the campaign site">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="15" fill="none" stroke="#FED105" stroke-width="1.4"/>
+          <path fill="#FED105" d="M16 5.2c.4 1.8-.2 3.2-1.2 4.4 1.6-.3 3 .6 3.6 1.8-.1-1.2.6-2.3 1.6-2.8-.2 1.5.2 2.6 1.2 3.6-1.8-3.6-6.4-3.2-8.4-.2-.4.6-.6 1.3-.6 2h2.2c0-1.4 1.2-2.6 2.6-2.6s2.5 1.1 2.5 2.6H21c0-1.1-.3-2.1-1-2.9 1.4 1.8 1.2 4.4-.4 5.6H12.4c-1.6-1.2-1.8-3.8-.4-5.6-.7.8-1 1.8-1 2.9h1.2c0-2.3 1.8-4.2 4-4.4C13 8.6 12.2 6.8 16 5.2Z"/>
+          <path fill="#FED105" d="M10.8 18.2h10.4l.8 1.6H10l.8-1.6Zm1.2 2.6h8l-1.2 6.6h-5.6L12 20.8Zm2.4 2.2h3.2v3.2h-1l-.2-2h-1l.2 2h-1.2v-3.2Z"/>
+        </svg>
+        <span>Jackson</span>
+      </a>
+      <span class="tag">Campaign portal</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Signed-out view -->
+    <section id="login-view" hidden>
+      <h1>Campaign Login</h1>
+      <p class="lede">For the campaign team only.</p>
+      <div class="panel">
+        <form id="login-form" novalidate>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+          <div class="row">
+            <button class="btn btn-solid" id="login-btn" type="submit">Send login link</button>
+          </div>
+          <p class="status" id="login-status" role="status" aria-live="polite"></p>
+          <p class="hint">We'll email you a one-time sign-in link. No password needed.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Signed-in view -->
+    <section id="chat-view" hidden>
+      <h1>Campaign Portal</h1>
+      <p class="lede">Request site changes and setup help here.</p>
+      <div class="panel">
+        <div class="chat-head">
+          <p class="who">Signed in as <strong id="who-email"></strong></p>
+          <button class="btn btn-small" id="signout-btn" type="button">Sign out</button>
+        </div>
+        <p class="note">Aaron's assistant reads every message here and usually replies within a few minutes. It handles content changes (wording, issues, photos, events) and setup. Bigger changes, like code, payments, or keys, get a quick OK from Aaron first.</p>
+        <div class="thread" id="thread" aria-live="polite" aria-label="Message history">
+          <p class="empty" id="empty">Loading messages…</p>
+        </div>
+        <form class="composer" id="send-form">
+          <label for="body">Your message</label>
+          <textarea id="body" name="body" maxlength="4000" required placeholder="e.g. Change the hero tagline to…"></textarea>
+          <div class="row">
+            <button class="btn btn-solid" id="send-btn" type="submit">Send</button>
+            <span class="hint">Ctrl/⌘ + Enter to send</span>
+          </div>
+          <p class="status" id="send-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <p class="status" id="boot-status">Loading…</p>
+  </main>
+
+  <footer>
+    <a href="/">← Back to jacksonforliberty.com</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    (function () {
+      // Public (anon/publishable) values only. Access is enforced by Row Level Security.
+      const SUPABASE_URL = "https://jhduhnrtvbvfsgdfpymx.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHVobnJ0dmJ2ZnNnZGZweW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNzk2MzMsImV4cCI6MjEwOTk1NTYzM30.9_bJCijaAZpgdmcLJXwB1N3jgiJ5XSQuRiOKyapgW08";
+      const REDIRECT_URL = "https://jacksonforliberty.com/portal/";
+      const ALLOWED = ["brandonjackson178@gmail.com", "info@jacksonforliberty.com"];
+      const POLL_MS = 5000;
+
+      const $ = (id) => document.getElementById(id);
+      const bootStatus = $("boot-status");
+
+      if (!window.supabase || !window.supabase.createClient) {
+        bootStatus.textContent = "Couldn't load the portal. Check your connection and refresh.";
+        bootStatus.className = "status error";
+        return;
+      }
+
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" }
+      });
+
+      let channel = null;
+      let pollTimer = null;
+      const seen = new Map();
+
+      function setStatus(el, text, kind) {
+        el.textContent = text || "";
+        el.className = "status" + (kind ? " " + kind : "");
+      }
+
+      function fmtTime(iso) {
+        try {
+          return new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+        } catch (e) { return ""; }
+      }
+
+      function renderAll() {
+        const thread = $("thread");
+        const rows = Array.from(seen.values()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+        const nearBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 80;
+        thread.textContent = "";
+        if (!rows.length) {
+          const p = document.createElement("p");
+          p.className = "empty";
+          p.textContent = "No messages yet. Say hello or send your first request.";
+          thread.appendChild(p);
+          return;
+        }
+        for (const m of rows) {
+          const div = document.createElement("div");
+          div.className = "msg " + (m.author === "brandon" ? "brandon" : "bot");
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = (m.author === "brandon" ? "You" : "Assistant") + " · " + fmtTime(m.created_at);
+          const body = document.createElement("div");
+          body.className = "body";
+          body.textContent = m.body;
+          div.append(meta, body);
+          thread.appendChild(div);
+        }
+        if (nearBottom || thread.dataset.first !== "done") {
+          thread.scrollTop = thread.scrollHeight;
+          thread.dataset.first = "done";
+        }
+      }
+
+      function addRows(rows) {
+        let changed = false;
+        for (const r of rows || []) {
+          const prev = seen.get(r.id);
+          if (!prev || prev.body !== r.body) { seen.set(r.id, r); changed = true; }
+        }
+        if (changed) renderAll();
+      }
+
+      async function loadMessages() {
+        const { data, error } = await sb
+          .from("portal_messages")
+          .select("id, created_at, author, body")
+          .order("created_at", { ascending: true })
+          .limit(500);
+        if (error) {
+          setStatus($("send-status"), "Couldn't load messages: " + error.message, "error");
+          return;
+        }
+        if (!seen.size && !data.length) renderAll();
+        addRows(data);
+      }
+
+      function startLive() {
+        stopLive();
+        channel = sb.channel("portal-messages")
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "portal_messages" }, (payload) => {
+            addRows([payload.new]);
+          })
+          .subscribe();
+        pollTimer = setInterval(loadMessages, POLL_MS);
+      }
+
+      function stopLive() {
+        if (channel) { sb.removeChannel(channel); channel = null; }
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      }
+
+      function showLogin() {
+        stopLive();
+        seen.clear();
+        $("chat-view").hidden = true;
+        $("login-view").hidden = false;
+        bootStatus.hidden = true;
+      }
+
+      async function showChat(session) {
+        const email = (session.user.email || "").toLowerCase();
+        $("who-email").textContent = email;
+        $("login-view").hidden = true;
+        $("chat-view").hidden = false;
+        bootStatus.hidden = true;
+        if (!ALLOWED.includes(email)) {
+          setStatus($("send-status"), "This account isn't on the campaign team list.", "error");
+          return;
+        }
+        await loadMessages();
+        startLive();
+        // Remove auth tokens from the address bar after a magic-link sign-in.
+        if (location.hash || location.search) history.replaceState(null, "", location.pathname);
+      }
+
+      // Hash errors from an expired/used link.
+      const hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const linkError = hashParams.get("error_description");
+
+      $("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const status = $("login-status");
+        const email = $("email").value.trim().toLowerCase();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setStatus(status, "Enter a valid email address.", "error");
+          return;
+        }
+        if (!ALLOWED.includes(email)) {
+          setStatus(status, "That email isn't authorized for the campaign portal.", "error");
+          return;
+        }
+        const btn = $("login-btn");
+        btn.disabled = true;
+        setStatus(status, "Sending…");
+        const { error } = await sb.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false, emailRedirectTo: REDIRECT_URL }
+        });
+        btn.disabled = false;
+        if (error) {
+          const msg = /signup|not allowed|not found/i.test(error.message)
+            ? "That email isn't authorized for the campaign portal."
+            : /rate|seconds|too many/i.test(error.message)
+              ? "A link was sent recently. Please wait a minute and check your inbox (and spam folder)."
+              : "Couldn't send the link: " + error.message;
+          setStatus(status, msg, "error");
+          return;
+        }
+        setStatus(status, "Check your inbox for a sign-in link from Supabase Auth. It may take a minute, and it can land in spam.", "ok");
+      });
+
+      $("send-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const ta = $("body");
+        const body = ta.value.trim();
+        const status = $("send-status");
+        if (!body) return;
+        const btn = $("send-btn");
+        btn.disabled = true;
+        setStatus(status, "Sending…");
+        const { data, error } = await sb
+          .from("portal_messages")
+          .insert({ author: "brandon", body })
+          .select("id, created_at, author, body")
+          .single();
+        btn.disabled = false;
+        if (error) {
+          setStatus(status, "Couldn't send: " + error.message, "error");
+          return;
+        }
+        ta.value = "";
+        setStatus(status, "Sent. The assistant will reply here.", "ok");
+        addRows([data]);
+      });
+
+      $("body").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          $("send-form").requestSubmit();
+        }
+      });
+
+      $("signout-btn").addEventListener("click", async () => {
+        await sb.auth.signOut();
+        showLogin();
+      });
+
+      sb.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_OUT") showLogin();
+        else if (event === "SIGNED_IN" && session && $("chat-view").hidden) showChat(session);
+      });
+
+      sb.auth.getSession().then(({ data }) => {
+        if (data.session) showChat(data.session);
+        else {
+          showLogin();
+          if (linkError) setStatus($("login-status"), "That sign-in link didn't work (" + linkError.replace(/\+/g, " ") + "). Request a new one below.", "error");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

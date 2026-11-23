@@ -16,6 +16,10 @@ Before this is treated as an official campaign site, replace these:
 - **Issue planks:** The six issue cards are starter Libertarian copy, not a confirmed personal platform. Edit them to match Brandon’s positions.
 - **Contact / social:** Campaign email is info@jacksonforliberty.com. Facebook is linked from his public profile. Add additional social accounts and any formal announcement copy when ready.
 
+## Campaign portal
+
+`/portal/` is a private, noindexed page where the campaign team signs in with a one-time email link (Supabase Auth, no password) and chats with Aaron's assistant about site changes. Only allowlisted emails can sign in. Messages live in the Supabase table `public.portal_messages`, protected by Row Level Security; the page ships only the public anon key. Schema reference: `supabase/portal_messages.sql`.
+
 ## Local preview
 
 Open `index.html` in a browser, or serve the folder:
