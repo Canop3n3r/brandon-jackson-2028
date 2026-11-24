@@ -193,6 +193,12 @@
     }
     .team .addr { word-break: break-all; }
     .team .sub { font-size: 0.78rem; color: var(--muted); }
+    table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .bars { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 12px 12px 0; margin-bottom: 14px; border: 1px solid var(--gold-line); background: var(--charcoal); overflow-x: auto; }
+    .bar { flex: 1 0 34px; max-width: 64px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 4px; }
+    .bar .fill { width: 100%; background: var(--gold); min-height: 2px; }
+    .bar .val { font-size: 0.7rem; color: var(--cream); font-variant-numeric: tabular-nums; }
+    .bar .lbl { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-bottom: 6px; white-space: nowrap; }
     .composer { border-top: 1px solid var(--gold-line); padding-top: 14px; }
     .hint { font-size: 0.78rem; color: var(--muted); }
 
@@ -205,6 +211,7 @@
     }
     @media (max-width: 560px) {
       .panel { padding: 20px; }
+      .tab { padding: 0.6rem 0.7rem; letter-spacing: 0.1em; }
       .msg { max-width: 92%; }
       .btn { width: 100%; }
       .btn-small { width: auto; }
@@ -247,7 +254,7 @@
     <!-- Signed-in view -->
     <section id="chat-view" hidden>
       <h1>Campaign Portal</h1>
-      <p class="lede">Request site changes, see signups, and manage team access.</p>
+      <p class="lede">Request site changes, see signups and visits, and manage team access.</p>
       <div class="panel">
         <div class="chat-head">
           <p class="who">Signed in as <strong id="who-email"></strong></p>
@@ -257,6 +264,7 @@
           <button class="tab" role="tab" id="tabbtn-chat" data-tab="chat" aria-controls="tab-chat" aria-selected="true">Chat</button>
           <button class="tab" role="tab" id="tabbtn-signups" data-tab="signups" aria-controls="tab-signups" aria-selected="false" tabindex="-1">Signups</button>
           <button class="tab" role="tab" id="tabbtn-team" data-tab="team" aria-controls="tab-team" aria-selected="false" tabindex="-1">Team</button>
+          <button class="tab" role="tab" id="tabbtn-visits" data-tab="visits" aria-controls="tab-visits" aria-selected="false" tabindex="-1">Visits</button>
         </div>
         <div class="tabpanel" id="tab-chat" role="tabpanel" aria-labelledby="tabbtn-chat">
         <p class="note">Aaron's assistant reads every message here and usually replies within a few minutes. It handles content changes (wording, issues, photos, events) and setup, and you approve changes to your site, portal, and email yourself. A few limits stay in place: passwords and keys are never shown here, donations stay off until the committee, EIN, bank account, and payment processor are set up, and nothing that costs money is turned on without approval.</p>
@@ -291,6 +299,24 @@
             </table>
           </div>
           <p class="status" id="signups-status" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="tabpanel" id="tab-visits" role="tabpanel" aria-labelledby="tabbtn-visits" hidden>
+          <div class="toolbar">
+            <p class="who" id="visits-count">Loading…</p>
+            <div class="row tight">
+              <button class="btn btn-small" id="visits-refresh" type="button">Refresh</button>
+            </div>
+          </div>
+          <p class="note">Website visits per month (Central Time). Each page load of jacksonforliberty.com counts as one visit; "Unique visitors" counts different browsers. Counting started on November 24, 2026, so there's no history before that. No cookies, IP addresses, or personal details are collected, and obvious bots are skipped.</p>
+          <div class="bars" id="visits-chart" aria-hidden="true" hidden></div>
+          <div class="table-wrap">
+            <table class="data" id="visits-table">
+              <thead><tr><th>Month</th><th class="num">Visits</th><th class="num">Unique visitors</th></tr></thead>
+              <tbody id="visits-body"></tbody>
+            </table>
+          </div>
+          <p class="status" id="visits-status" role="status" aria-live="polite"></p>
         </div>
 
         <div class="tabpanel" id="tab-team" role="tabpanel" aria-labelledby="tabbtn-team" hidden>
@@ -422,7 +448,7 @@
       }
 
       // ——— Tabs ———
-      const TABS = ["chat", "signups", "team"];
+      const TABS = ["chat", "signups", "team", "visits"];
       function selectTab(name) {
         for (const t of TABS) {
           const on = t === name;
@@ -433,6 +459,7 @@
         }
         if (name === "signups") loadSignups();
         if (name === "team") loadTeam();
+        if (name === "visits") loadVisits();
         if (name === "chat") { const th = $("thread"); th.scrollTop = th.scrollHeight; }
       }
       document.querySelectorAll(".tab").forEach((btn) => {
@@ -519,6 +546,62 @@
       $("signups-refresh").addEventListener("click", loadSignups);
       $("signups-csv").addEventListener("click", downloadCsv);
       $("signups-csv-list").addEventListener("click", downloadEmailListCsv);
+
+      // ——— Visits ———
+      function fmtMonth(d) {
+        // d is "YYYY-MM-DD" (first of the month, Central Time)
+        const [y, m] = String(d).split("-").map(Number);
+        try { return new Date(y, m - 1, 1).toLocaleDateString([], { year: "numeric", month: "long" }); }
+        catch (e) { return d; }
+      }
+      function fmtShortMonth(d) {
+        const [y, m] = String(d).split("-").map(Number);
+        try { return new Date(y, m - 1, 1).toLocaleDateString([], { month: "short", year: "2-digit" }); }
+        catch (e) { return d; }
+      }
+      async function loadVisits() {
+        const status = $("visits-status");
+        setStatus(status, "Loading…");
+        const { data, error } = await sb.rpc("portal_visits_by_month");
+        if (error) { setStatus(status, "Couldn't load visits: " + error.message, "error"); return; }
+        const rows = (data || []).map(r => ({ month: r.month, visits: Number(r.visits) || 0, unique: Number(r.unique_visitors) || 0 }));
+        const tbody = $("visits-body");
+        tbody.textContent = "";
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          [fmtMonth(r.month), r.visits.toLocaleString(), r.unique.toLocaleString()].forEach((v, i) => {
+            const td = document.createElement("td");
+            if (i > 0) td.className = "num";
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+        if (!rows.length) {
+          const tr = document.createElement("tr"); const td = document.createElement("td");
+          td.colSpan = 3; td.className = "hint"; td.textContent = "No visits counted yet. New visits will show up here.";
+          tr.appendChild(td); tbody.appendChild(tr);
+        }
+        // Simple bar chart, oldest to newest (last 12 months with data).
+        const chart = $("visits-chart");
+        chart.textContent = "";
+        const recent = rows.slice(0, 12).reverse();
+        const max = Math.max(1, ...recent.map(r => r.visits));
+        for (const r of recent) {
+          const bar = document.createElement("div"); bar.className = "bar";
+          bar.title = fmtMonth(r.month) + ": " + r.visits + " visits, " + r.unique + " unique";
+          const val = document.createElement("span"); val.className = "val"; val.textContent = r.visits.toLocaleString();
+          const fill = document.createElement("div"); fill.className = "fill";
+          fill.style.height = Math.max(2, Math.round((r.visits / max) * 80)) + "px";
+          const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = fmtShortMonth(r.month);
+          bar.append(val, fill, lbl); chart.appendChild(bar);
+        }
+        chart.hidden = !recent.length;
+        const total = rows.reduce((a, r) => a + r.visits, 0);
+        $("visits-count").textContent = total.toLocaleString() + (total === 1 ? " visit" : " visits") + " since Nov 24, 2026";
+        setStatus(status, "");
+      }
+      $("visits-refresh").addEventListener("click", loadVisits);
 
       // ——— Team ———
       async function loadTeam() {

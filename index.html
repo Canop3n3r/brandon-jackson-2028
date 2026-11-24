@@ -1122,6 +1122,41 @@
       // Copy of each signup for the campaign portal. Public anon key: insert-only, enforced by Row Level Security.
       const SIGNUPS_URL = "https://jhduhnrtvbvfsgdfpymx.supabase.co/rest/v1/signups";
       const SIGNUPS_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoZHVobnJ0dmJ2ZnNnZGZweW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNzk2MzMsImV4cCI6MjEwOTk1NTYzM30.9_bJCijaAZpgdmcLJXwB1N3jgiJ5XSQuRiOKyapgW08";
+      // Anonymous visit counter for the campaign portal's Visits tab: one row per page load.
+      // No cookies, no IP or personal data: just the path, the referring site's host, and a random id kept in this browser.
+      (function logVisit() {
+        try {
+          if (!/(^|\.)jacksonforliberty\.com$/i.test(location.hostname)) return;  // live site only
+          if (navigator.webdriver || /bot|crawl|spider|slurp|preview|headless|lighthouse|facebookexternalhit|bingpreview/i.test(navigator.userAgent || "")) return;
+          var vid = null;
+          try {
+            vid = localStorage.getItem("jfl_vid");
+            if (!vid || !/^[A-Za-z0-9-]{8,64}$/.test(vid)) {
+              vid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+              localStorage.setItem("jfl_vid", vid);
+            }
+          } catch (e) { vid = null; }
+          var ref = null;
+          try {
+            if (document.referrer) {
+              var h = new URL(document.referrer).hostname.toLowerCase();
+              if (h && h !== location.hostname.toLowerCase()) ref = h.slice(0, 253);
+            }
+          } catch (e) { ref = null; }
+          fetch("https://jhduhnrtvbvfsgdfpymx.supabase.co/rest/v1/site_visits", {
+            method: "POST",
+            keepalive: true,
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": SIGNUPS_KEY,
+              "Authorization": "Bearer " + SIGNUPS_KEY,
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify({ path: (location.pathname || "/").slice(0, 200), referrer_host: ref, visitor_id: vid })
+          }).catch(function () {});
+        } catch (err) { /* never break the page */ }
+      })();
       function clip(v, max) {
         v = String(v == null ? "" : v).trim();
         return v.length > max ? v.slice(0, max) : v;
