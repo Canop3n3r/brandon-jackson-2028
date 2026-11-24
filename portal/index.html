@@ -6,6 +6,9 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
   <title>Campaign Portal | Brandon Jackson for President</title>
+  <link rel="icon" href="/favicon.ico" sizes="32x32 48x48">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -263,8 +266,9 @@
         <div class="tabs" role="tablist" aria-label="Portal sections">
           <button class="tab" role="tab" id="tabbtn-chat" data-tab="chat" aria-controls="tab-chat" aria-selected="true">Chat</button>
           <button class="tab" role="tab" id="tabbtn-signups" data-tab="signups" aria-controls="tab-signups" aria-selected="false" tabindex="-1">Signups</button>
-          <button class="tab" role="tab" id="tabbtn-team" data-tab="team" aria-controls="tab-team" aria-selected="false" tabindex="-1">Team</button>
           <button class="tab" role="tab" id="tabbtn-visits" data-tab="visits" aria-controls="tab-visits" aria-selected="false" tabindex="-1">Visits</button>
+          <!-- Add new tabs ABOVE this line. Team always stays the last tab. -->
+          <button class="tab" role="tab" id="tabbtn-team" data-tab="team" aria-controls="tab-team" aria-selected="false" tabindex="-1">Team</button>
         </div>
         <div class="tabpanel" id="tab-chat" role="tabpanel" aria-labelledby="tabbtn-chat">
         <p class="note">Aaron's assistant reads every message here and usually replies within a few minutes. It handles content changes (wording, issues, photos, events) and setup, and you approve changes to your site, portal, and email yourself. A few limits stay in place: passwords and keys are never shown here, donations stay off until the committee, EIN, bank account, and payment processor are set up, and nothing that costs money is turned on without approval.</p>
@@ -320,7 +324,7 @@
         </div>
 
         <div class="tabpanel" id="tab-team" role="tabpanel" aria-labelledby="tabbtn-team" hidden>
-          <p class="note">People on this list can sign in to the portal with a one-time email link and see everything here. Brandon's address can't be removed.</p>
+          <p class="note">People on this list can sign in to the portal with a one-time email link and see Signups, Visits, and Team. The Chat tab is private to Brandon and Aaron; adding someone here never gives them chat access. Brandon's and Aaron's addresses can't be removed.</p>
           <ul class="team" id="team-list"><li class="hint">Loading…</li></ul>
           <form id="team-form" class="composer" novalidate>
             <label for="team-email">Add a team member's email</label>
@@ -448,15 +452,18 @@
       }
 
       // ——— Tabs ———
-      const TABS = ["chat", "signups", "team", "visits"];
+      // Tab order comes from the buttons in the HTML (Team is always last; add new tabs before it).
+      const ALL_TABS = Array.from(document.querySelectorAll(".tab")).map((b) => b.dataset.tab);
+      let TABS = ALL_TABS.slice();
       function selectTab(name) {
-        for (const t of TABS) {
-          const on = t === name;
+        for (const t of ALL_TABS) {
+          const on = t === name && TABS.includes(t);
           const btn = $("tabbtn-" + t);
           btn.setAttribute("aria-selected", String(on));
           btn.tabIndex = on ? 0 : -1;
           $("tab-" + t).hidden = !on;
         }
+        if (!TABS.includes(name)) return;
         if (name === "signups") loadSignups();
         if (name === "team") loadTeam();
         if (name === "visits") loadVisits();
@@ -616,7 +623,7 @@
           const addr = document.createElement("div"); addr.className = "addr";
           addr.textContent = m.email + (m.email === me ? " (you)" : "");
           const sub = document.createElement("div"); sub.className = "sub";
-          sub.textContent = m.protected ? "Owner · can't be removed"
+          sub.textContent = m.protected ? "Owner · chat access · can't be removed"
             : m.last_sign_in_at ? "Last signed in " + fmtDate(m.last_sign_in_at) : "Hasn't signed in yet";
           if (m.protected && m.last_sign_in_at) sub.textContent += " · last signed in " + fmtDate(m.last_sign_in_at);
           info.append(addr, sub); li.appendChild(info);
@@ -668,14 +675,25 @@
         $("login-view").hidden = true;
         $("chat-view").hidden = false;
         bootStatus.hidden = true;
-        const { data: allowed } = await sb.rpc("is_portal_user");
-        if (allowed !== true) {
+        const [{ data: allowed }, { data: chatOk }] = await Promise.all([
+          sb.rpc("is_portal_user"),
+          sb.rpc("is_portal_chat_user")
+        ]);
+        // Chat is limited to Brandon and Aaron (enforced by database security, not just this page).
+        const canChat = chatOk === true;
+        $("tabbtn-chat").hidden = !canChat;
+        if (allowed !== true && !canChat) {
+          $("tabbtn-chat").hidden = false;
           setStatus($("send-status"), "This account isn't on the campaign team list.", "error");
           return;
         }
-        selectTab("chat");
-        await loadMessages();
-        startLive();
+        TABS = ALL_TABS.filter((t) => (t === "chat" ? canChat : allowed === true));
+        document.querySelectorAll(".tab").forEach((b) => { b.hidden = !TABS.includes(b.dataset.tab); });
+        selectTab(TABS[0]);
+        if (canChat) {
+          await loadMessages();
+          startLive();
+        }
         // Remove auth tokens from the address bar after a magic-link sign-in.
         if (location.hash || location.search) history.replaceState(null, "", location.pathname);
       }
