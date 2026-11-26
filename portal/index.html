@@ -38,9 +38,10 @@
     }
     a { color: var(--gold); text-decoration: none; }
     a:hover { text-decoration: underline; text-underline-offset: 3px; }
-    button, input, textarea { font: inherit; color: inherit; }
+    button, input, select, textarea { font: inherit; color: inherit; }
     button { cursor: pointer; }
     [hidden] { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
     .nav {
       height: 72px;
@@ -203,6 +204,26 @@
     .bar .val { font-size: 0.7rem; color: var(--cream); font-variant-numeric: tabular-nums; }
     .bar .lbl { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-bottom: 6px; white-space: nowrap; }
     .composer { border-top: 1px solid var(--gold-line); padding-top: 14px; }
+    .viewbar { display: flex; justify-content: space-between; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .seg { display: inline-flex; border: 1px solid var(--gold-line); }
+    .seg button {
+      background: transparent; border: 0; padding: 0.5rem 0.85rem;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-muted);
+    }
+    .seg button + button { border-left: 1px solid var(--gold-line); }
+    .seg button[aria-pressed="true"] { background: var(--gold); color: var(--black); }
+    .seg button:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .filter { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter label { margin: 0; }
+    select {
+      font: inherit; color: var(--cream); background: var(--black);
+      border: 1px solid var(--gold-line); padding: 0.45rem 0.6rem; max-width: 100%;
+    }
+    table.data td.act { white-space: nowrap; text-align: right; }
+    table.data td.act .btn + .btn { margin-left: 6px; }
+    .share { display: inline-block; height: 8px; background: var(--gold); vertical-align: middle; margin-right: 8px; min-width: 2px; }
+    table.data td.st { word-break: normal; overflow-wrap: normal; min-width: 7em; }
+    table.data tfoot td { font-weight: 600; border-top: 1px solid var(--gold-line); }
     .hint { font-size: 0.78rem; color: var(--muted); }
 
     footer {
@@ -218,6 +239,16 @@
       .msg { max-width: 92%; }
       .btn { width: 100%; }
       .btn-small { width: auto; }
+      .viewbar { align-items: stretch; }
+      .filter { width: 100%; }
+      .filter select { flex: 1 1 140px; }
+      table.data th, table.data td { padding: 7px 7px; }
+      table.data th { letter-spacing: 0.06em; }
+      table.data td.st { min-width: 6em; }
+      table.data td.act .btn-small { padding: 0.45rem 0.55rem; letter-spacing: 0.08em; }
+      table.data .col-share { display: none; }
+      table.data td.act .btn { display: block; width: 100%; }
+      table.data td.act .btn + .btn { margin: 6px 0 0; }
     }
   </style>
 </head>
@@ -295,11 +326,28 @@
               <button class="btn btn-small" id="signups-csv-list" type="button" disabled>Download email list CSV</button>
             </div>
           </div>
-          <p class="note">Volunteer signups from the site's "Get involved" form. Each one is still emailed to info@ as before. Signups sent before this tab went live are only in the info@ inbox, and message text stays in the email only. "Email list" shows who ticked the opt-in box; "Download email list CSV" exports just those people.</p>
-          <div class="table-wrap">
+          <p class="note">Volunteer signups from the site's "Get involved" form. Each one is still emailed to info@ as before. Signups sent before this tab went live are only in the info@ inbox, and message text stays in the email only. "Email list" shows who ticked the opt-in box; "Download email list CSV" exports just those people. "By state" counts signups per state (read from what people typed for city/state; anything that can't be matched to a state is listed as Unknown), and you can download a CSV for any one state.</p>
+          <div class="viewbar">
+            <div class="seg" role="group" aria-label="Signups view">
+              <button type="button" id="signups-view-list" aria-pressed="true">All signups</button>
+              <button type="button" id="signups-view-states" aria-pressed="false">By state</button>
+            </div>
+            <div class="filter">
+              <label for="signups-state">State</label>
+              <select id="signups-state"><option value="">All states</option></select>
+              <button class="btn btn-small" id="signups-csv-state" type="button" disabled>Download state CSV</button>
+            </div>
+          </div>
+          <div class="table-wrap" id="signups-list-wrap">
             <table class="data" id="signups-table">
-              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>City / State</th><th>Interests</th><th>Email list</th></tr></thead>
+              <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>City / State</th><th>State</th><th>Interests</th><th>Email list</th></tr></thead>
               <tbody id="signups-body"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap" id="signups-states-wrap" hidden>
+            <table class="data" id="signups-states-table">
+              <thead><tr><th>State</th><th class="num">Signups</th><th class="num">Email list</th><th class="num col-share">Share</th><th class="num"><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody id="signups-states-body"></tbody>
             </table>
           </div>
           <p class="status" id="signups-status" role="status" aria-live="polite"></p>
@@ -312,13 +360,37 @@
               <button class="btn btn-small" id="visits-refresh" type="button">Refresh</button>
             </div>
           </div>
-          <p class="note">Website visits per month (Central Time). Each page load of jacksonforliberty.com counts as one visit; "Unique visitors" counts different browsers. Counting started on November 24, 2026, so there's no history before that. No cookies, IP addresses, or personal details are collected, and obvious bots are skipped.</p>
-          <div class="bars" id="visits-chart" aria-hidden="true" hidden></div>
-          <div class="table-wrap">
-            <table class="data" id="visits-table">
-              <thead><tr><th>Month</th><th class="num">Visits</th><th class="num">Unique visitors</th></tr></thead>
-              <tbody id="visits-body"></tbody>
-            </table>
+          <p class="note">Website visits per month (Central Time). Each page load of jacksonforliberty.com counts as one visit; "Unique visitors" counts different browsers. Counting started on November 24, 2026, so there's no history before that. "By state" shows roughly where visitors are, starting November 26, 2026. No cookies or personal details are collected, IP addresses are never saved, and obvious bots are skipped.</p>
+          <div class="viewbar">
+            <div class="seg" role="group" aria-label="Visits view">
+              <button type="button" id="visits-view-month" aria-pressed="true">By month</button>
+              <button type="button" id="visits-view-state" aria-pressed="false">By state</button>
+            </div>
+            <div class="filter" id="visits-state-filter" hidden>
+              <label for="visits-month">Month</label>
+              <select id="visits-month"><option value="">All months</option></select>
+              <button class="btn btn-small" id="visits-state-csv" type="button" disabled>Download CSV</button>
+            </div>
+          </div>
+          <div id="visits-month-view">
+            <div class="bars" id="visits-chart" aria-hidden="true" hidden></div>
+            <div class="table-wrap">
+              <table class="data" id="visits-table">
+                <thead><tr><th>Month</th><th class="num">Visits</th><th class="num">Unique visitors</th></tr></thead>
+                <tbody id="visits-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="visits-state-view" hidden>
+            <p class="hint" id="visits-state-since" style="margin-bottom:10px"></p>
+            <div class="table-wrap">
+              <table class="data" id="visits-state-table">
+                <thead><tr><th>State</th><th class="num">Visits</th><th class="num">Unique visitors</th><th class="col-share">Share</th></tr></thead>
+                <tbody id="visits-state-body"></tbody>
+                <tfoot id="visits-state-foot"></tfoot>
+              </table>
+            </div>
+            <p class="hint" style="margin-top:10px">State is an estimate from the visitor's internet connection, looked up on our own server; the IP address is never saved. It's usually right for home internet but can be off for phones on cellular data, VPNs, and corporate networks, which may show up under a neighboring state or as Unknown. "Outside the US" means the visit came from another country. IP geolocation by <a href="https://db-ip.com" target="_blank" rel="noopener">DB-IP</a>.</p>
           </div>
           <p class="status" id="visits-status" role="status" aria-live="polite"></p>
         </div>
@@ -482,9 +554,90 @@
 
       // ——— Signups ———
       let signups = [];
+      let signupsView = "list";
       function fmtDate(iso) {
         try { return new Date(iso).toLocaleString([], { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); }
         catch (e) { return iso; }
+      }
+      // US states + DC + territories. Used for signups (parsed from free text) and visits (codes from the server).
+      const STATE_NAMES = {
+        AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut",
+        DE: "Delaware", DC: "District of Columbia", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois",
+        IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+        MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana",
+        NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+        NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania",
+        RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
+        VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
+        PR: "Puerto Rico", GU: "Guam", VI: "U.S. Virgin Islands", AS: "American Samoa", MP: "Northern Mariana Islands"
+      };
+      const STATE_ALIASES = (() => {
+        const m = {};
+        const norm = (t) => t.toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+        for (const [code, name] of Object.entries(STATE_NAMES)) m[norm(name)] = code;
+        const extra = {
+          "ala": "AL", "ariz": "AZ", "ark": "AR", "calif": "CA", "cali": "CA", "cal": "CA", "colo": "CO", "conn": "CT",
+          "del": "DE", "d c": "DC", "washington dc": "DC", "washington d c": "DC", "fla": "FL", "ill": "IL", "ind": "IN",
+          "kan": "KS", "kans": "KS", "mass": "MA", "mich": "MI", "minn": "MN", "miss": "MS", "mont": "MT", "neb": "NE",
+          "nebr": "NE", "nev": "NV", "n carolina": "NC", "n dakota": "ND", "s carolina": "SC", "s dakota": "SD",
+          "okla": "OK", "ore": "OR", "oreg": "OR", "penn": "PA", "penna": "PA", "tenn": "TN", "tex": "TX", "wash": "WA",
+          "w virginia": "WV", "w va": "WV", "wis": "WI", "wisc": "WI", "wyo": "WY", "virgin islands": "VI",
+          "us virgin islands": "VI", "n mariana islands": "MP"
+        };
+        Object.assign(m, extra);
+        return m;
+      })();
+      // Turn free-text "City / State" into a 2-letter code ("" when it can't be matched).
+      function parseState(raw) {
+        let t = String(raw || "").trim();
+        if (!t) return "";
+        const norm = (x) => x.toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+        const isCode = (x) => Object.prototype.hasOwnProperty.call(STATE_NAMES, x);
+        // Drop ZIP codes and trailing country names.
+        t = t.replace(/\b\d{5}(-\d{4})?\b/g, " ").replace(/[,\s]*(u\.?s\.?a?\.?|united states( of america)?|america)\s*$/i, "").trim();
+        if (/\b(d\.?\s?c\.?|district of columbia)\s*$/i.test(t) && /(washington|\bd\.?\s?c\.?$|district)/i.test(t)) return "DC";
+        const parts = t.split(/[,/;|()\-–—]+/).map((x) => x.trim()).filter(Boolean);
+        // 1) Last comma/slash-separated part: a code ("CA", "ca", "Ca.") or a name/abbreviation ("California", "Calif.").
+        for (let i = parts.length - 1; i >= 0 && i >= parts.length - 2; i--) {
+          const p = parts[i];
+          const code = p.replace(/\./g, "").toUpperCase();
+          if (code.length === 2 && isCode(code) && (parts.length > 1 || /^[A-Z]{2}\.?$/.test(p) || p.length === 2)) return code;
+          const a = STATE_ALIASES[norm(p)];
+          if (a) return a;
+          if (parts.length === 1) break;
+        }
+        // 2) Space-separated: "Sacramento CA", "Austin Texas", "Charleston West Virginia".
+        const words = t.replace(/[.,]/g, " ").split(/\s+/).filter(Boolean);
+        const last = words[words.length - 1] || "";
+        if (words.length > 1 && /^[A-Z]{2}$/.test(last) && isCode(last)) return last;
+        for (let n = Math.min(4, words.length); n >= 1; n--) {
+          const a = STATE_ALIASES[norm(words.slice(words.length - n).join(" "))];
+          if (a && (n > 1 || norm(last).length > 3 || words.length === 1)) return a;
+        }
+        // 3) A state name anywhere (longest first), e.g. "Lives in Ohio near Dayton". Skip "Kansas City" (KS or MO).
+        const flat = " " + norm(t).replace(/\bkansas city\b/g, " ") + " ";
+        let best = "", bestLen = 0;
+        for (const [name, code] of Object.entries(STATE_ALIASES)) {
+          if (name.length >= 4 && name.length > bestLen && flat.includes(" " + name + " ")) { best = code; bestLen = name.length; }
+        }
+        return best;
+      }
+      function stateLabel(code) {
+        if (!code || code === "UNKNOWN") return "Unknown";
+        if (code === "OUTSIDE_US") return "Outside the US";
+        return STATE_NAMES[code] ? STATE_NAMES[code] + " (" + code + ")" : code;
+      }
+      function signupsByState(rows) {
+        const m = new Map();
+        for (const r of rows) {
+          const k = r.state || "UNKNOWN";
+          const e = m.get(k) || { state: k, count: 0, optins: 0 };
+          e.count++; if (r.email_list) e.optins++;
+          m.set(k, e);
+        }
+        // Most signups first; Unknown always last.
+        return Array.from(m.values()).sort((a, b) =>
+          (a.state === "UNKNOWN") - (b.state === "UNKNOWN") || b.count - a.count || stateLabel(a.state).localeCompare(stateLabel(b.state)));
       }
       async function loadSignups() {
         const status = $("signups-status");
@@ -495,12 +648,33 @@
           .order("created_at", { ascending: false })
           .limit(5000);
         if (error) { setStatus(status, "Couldn't load signups: " + error.message, "error"); return; }
-        signups = data || [];
+        signups = (data || []).map((r) => Object.assign({}, r, { state: parseState(r.city_state) }));
+        renderSignups();
+        setStatus(status, "");
+      }
+      function renderSignups() {
+        const groups = signupsByState(signups);
+        // State filter options (keep the current choice if it still exists).
+        const sel = $("signups-state");
+        const cur = sel.value;
+        sel.textContent = "";
+        const all = document.createElement("option"); all.value = ""; all.textContent = "All states (" + signups.length + ")";
+        sel.appendChild(all);
+        for (const g of groups) {
+          const o = document.createElement("option"); o.value = g.state;
+          o.textContent = stateLabel(g.state) + " (" + g.count + ")";
+          sel.appendChild(o);
+        }
+        sel.value = groups.some((g) => g.state === cur) ? cur : "";
+        const filter = sel.value;
+        const shown = filter ? signups.filter((r) => (r.state || "UNKNOWN") === filter) : signups;
+
+        // List view
         const tbody = $("signups-body");
         tbody.textContent = "";
-        for (const r of signups) {
+        for (const r of shown) {
           const tr = document.createElement("tr");
-          const cells = [fmtDate(r.created_at), r.name, r.email, r.city_state || "", r.interests || "", r.email_list ? "Yes" : "No"];
+          const cells = [fmtDate(r.created_at), r.name, r.email, r.city_state || "", r.state || "Unknown", r.interests || "", r.email_list ? "Yes" : "No"];
           cells.forEach((v, i) => {
             const td = document.createElement("td");
             if (i === 0) td.className = "nowrap";
@@ -512,17 +686,57 @@
           });
           tbody.appendChild(tr);
         }
-        if (!signups.length) {
+        if (!shown.length) {
           const tr = document.createElement("tr"); const td = document.createElement("td");
-          td.colSpan = 6; td.className = "hint"; td.textContent = "No signups yet.";
+          td.colSpan = 7; td.className = "hint"; td.textContent = signups.length ? "No signups for this state." : "No signups yet.";
           tr.appendChild(td); tbody.appendChild(tr);
         }
-        $("signups-count").textContent = signups.length + (signups.length === 1 ? " signup" : " signups");
-        $("signups-csv").disabled = !signups.length;
+
+        // By-state view
+        const sbody = $("signups-states-body");
+        sbody.textContent = "";
+        for (const g of groups) {
+          const tr = document.createElement("tr");
+          const name = document.createElement("td"); name.className = "st"; name.textContent = stateLabel(g.state);
+          const c = document.createElement("td"); c.className = "num"; c.textContent = g.count.toLocaleString();
+          const o = document.createElement("td"); o.className = "num"; o.textContent = g.optins.toLocaleString();
+          const sh = document.createElement("td"); sh.className = "num col-share";
+          sh.textContent = Math.round((g.count / signups.length) * 100) + "%";
+          const act = document.createElement("td"); act.className = "act";
+          const view = document.createElement("button"); view.type = "button"; view.className = "btn btn-small"; view.textContent = "View";
+          view.setAttribute("aria-label", "View signups from " + stateLabel(g.state));
+          view.addEventListener("click", () => { sel.value = g.state; setSignupsView("list"); renderSignups(); });
+          const dl = document.createElement("button"); dl.type = "button"; dl.className = "btn btn-small btn-solid"; dl.textContent = "CSV";
+          dl.setAttribute("aria-label", "Download CSV of signups from " + stateLabel(g.state));
+          dl.addEventListener("click", () => downloadStateCsv(g.state));
+          act.append(view, dl);
+          tr.append(name, c, o, sh, act);
+          sbody.appendChild(tr);
+        }
+        if (!groups.length) {
+          const tr = document.createElement("tr"); const td = document.createElement("td");
+          td.colSpan = 5; td.className = "hint"; td.textContent = "No signups yet.";
+          tr.appendChild(td); sbody.appendChild(tr);
+        }
+
         const optins = signups.filter(r => r.email_list).length;
+        const states = groups.filter((g) => g.state !== "UNKNOWN").length;
+        $("signups-count").textContent = signups.length + (signups.length === 1 ? " signup" : " signups") +
+          " · " + optins + " on email list · " + states + (states === 1 ? " state" : " states") +
+          (filter ? " · showing " + shown.length + " from " + stateLabel(filter) : "");
+        $("signups-csv").disabled = !signups.length;
         $("signups-csv-list").disabled = !optins;
-        $("signups-count").textContent += " · " + optins + " on email list";
-        setStatus(status, "");
+        const sbtn = $("signups-csv-state");
+        sbtn.disabled = !filter || !shown.length;
+        sbtn.textContent = filter ? "Download " + (filter === "UNKNOWN" ? "Unknown" : filter) + " CSV" : "Download state CSV";
+        sbtn.title = filter ? "" : "Pick a state first";
+      }
+      function setSignupsView(v) {
+        signupsView = v;
+        $("signups-view-list").setAttribute("aria-pressed", String(v === "list"));
+        $("signups-view-states").setAttribute("aria-pressed", String(v === "states"));
+        $("signups-list-wrap").hidden = v !== "list";
+        $("signups-states-wrap").hidden = v !== "states";
       }
       function csvCell(v) {
         let s = v == null ? "" : String(v);
@@ -540,19 +754,28 @@
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       }
+      const SIGNUP_HEAD = ["Signed up (UTC)", "Name", "Email", "City / State", "State", "Interests", "Email list"];
+      const signupRow = (r) => [r.created_at, r.name, r.email, r.city_state, r.state || "Unknown", r.interests, r.email_list ? "Yes" : "No"];
       function downloadCsv() {
-        saveCsv(["Signed up (UTC)", "Name", "Email", "City / State", "Interests", "Email list"],
-          signups.map(r => [r.created_at, r.name, r.email, r.city_state, r.interests, r.email_list ? "Yes" : "No"]),
-          "jackson-signups");
+        saveCsv(SIGNUP_HEAD, signups.map(signupRow), "jackson-signups");
+      }
+      function downloadStateCsv(code) {
+        const rows = signups.filter((r) => (r.state || "UNKNOWN") === code);
+        if (!rows.length) return;
+        saveCsv(SIGNUP_HEAD, rows.map(signupRow), "jackson-signups-" + (code === "UNKNOWN" ? "unknown-state" : code));
       }
       function downloadEmailListCsv() {
-        saveCsv(["Name", "Email", "City / State"],
-          signups.filter(r => r.email_list).map(r => [r.name, r.email, r.city_state]),
+        saveCsv(["Name", "Email", "City / State", "State"],
+          signups.filter(r => r.email_list).map(r => [r.name, r.email, r.city_state, r.state || "Unknown"]),
           "jackson-email-list");
       }
       $("signups-refresh").addEventListener("click", loadSignups);
       $("signups-csv").addEventListener("click", downloadCsv);
       $("signups-csv-list").addEventListener("click", downloadEmailListCsv);
+      $("signups-csv-state").addEventListener("click", () => { const v = $("signups-state").value; if (v) downloadStateCsv(v); });
+      $("signups-state").addEventListener("change", renderSignups);
+      $("signups-view-list").addEventListener("click", () => setSignupsView("list"));
+      $("signups-view-states").addEventListener("click", () => setSignupsView("states"));
 
       // ——— Visits ———
       function fmtMonth(d) {
@@ -606,9 +829,90 @@
         chart.hidden = !recent.length;
         const total = rows.reduce((a, r) => a + r.visits, 0);
         $("visits-count").textContent = total.toLocaleString() + (total === 1 ? " visit" : " visits") + " since Nov 24, 2026";
+        // Month picker for the by-state view.
+        const msel = $("visits-month");
+        const cur = msel.value;
+        msel.textContent = "";
+        const all = document.createElement("option"); all.value = ""; all.textContent = "All months";
+        msel.appendChild(all);
+        for (const r of rows) {
+          const o = document.createElement("option"); o.value = String(r.month).slice(0, 10); o.textContent = fmtMonth(r.month);
+          msel.appendChild(o);
+        }
+        msel.value = rows.some((r) => String(r.month).slice(0, 10) === cur) ? cur : "";
+        setStatus(status, "");
+        if (visitsView === "state") await loadVisitsByState();
+      }
+      let visitsView = "month";
+      let visitsStateRows = [];
+      async function loadVisitsByState() {
+        const status = $("visits-status");
+        setStatus(status, "Loading…");
+        const month = $("visits-month").value || null;
+        const { data, error } = await sb.rpc("portal_visits_by_state", { p_month: month });
+        if (error) { setStatus(status, "Couldn't load visits by state: " + error.message, "error"); return; }
+        visitsStateRows = (data || []).map((r) => ({ region: r.region, visits: Number(r.visits) || 0, unique: Number(r.unique_visitors) || 0, since: r.tracking_since }));
+        // States first (most visits first), then Outside the US, then Unknown.
+        const rank = (k) => (k === "UNKNOWN" ? 2 : k === "OUTSIDE_US" ? 1 : 0);
+        visitsStateRows.sort((a, b) => rank(a.region) - rank(b.region) || b.visits - a.visits || a.region.localeCompare(b.region));
+        renderVisitsByState(month);
         setStatus(status, "");
       }
+      function renderVisitsByState(month) {
+        const rows = visitsStateRows;
+        const tbody = $("visits-state-body"); tbody.textContent = "";
+        const foot = $("visits-state-foot"); foot.textContent = "";
+        const total = rows.reduce((a, r) => a + r.visits, 0);
+        const max = Math.max(1, ...rows.map((r) => r.visits));
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          const n = document.createElement("td"); n.className = "st"; n.textContent = stateLabel(r.region);
+          const v = document.createElement("td"); v.className = "num"; v.textContent = r.visits.toLocaleString();
+          const u = document.createElement("td"); u.className = "num"; u.textContent = r.unique.toLocaleString();
+          const sh = document.createElement("td"); sh.className = "nowrap col-share";
+          const bar = document.createElement("span"); bar.className = "share"; bar.style.width = Math.max(2, Math.round((r.visits / max) * 90)) + "px";
+          sh.append(bar, document.createTextNode(Math.round((r.visits / Math.max(1, total)) * 100) + "%"));
+          tr.append(n, v, u, sh);
+          tbody.appendChild(tr);
+        }
+        if (!rows.length) {
+          const tr = document.createElement("tr"); const td = document.createElement("td");
+          td.colSpan = 4; td.className = "hint";
+          td.textContent = month ? "No visits with a state for this month." : "No visits with a state yet. New visits will show up here.";
+          tr.appendChild(td); tbody.appendChild(tr);
+        } else {
+          const tr = document.createElement("tr");
+          const states = rows.filter((r) => r.region !== "UNKNOWN" && r.region !== "OUTSIDE_US").length;
+          [states + (states === 1 ? " state" : " states"), total.toLocaleString(), "", ""].forEach((t, i) => {
+            const td = document.createElement("td"); if (i === 1) td.className = "num"; td.textContent = t; tr.appendChild(td);
+          });
+          foot.appendChild(tr);
+        }
+        const since = rows.length && rows[0].since ? new Date(rows[0].since) : null;
+        $("visits-state-since").textContent = "State counts started " +
+          (since ? since.toLocaleDateString([], { year: "numeric", month: "long", day: "numeric" }) : "November 26, 2026") +
+          ". Visits before that don't have a state, so these totals are lower than the monthly view.";
+        $("visits-state-csv").disabled = !rows.length;
+      }
+      function setVisitsView(v) {
+        visitsView = v;
+        $("visits-view-month").setAttribute("aria-pressed", String(v === "month"));
+        $("visits-view-state").setAttribute("aria-pressed", String(v === "state"));
+        $("visits-month-view").hidden = v !== "month";
+        $("visits-state-view").hidden = v !== "state";
+        $("visits-state-filter").hidden = v !== "state";
+        if (v === "state") loadVisitsByState();
+      }
       $("visits-refresh").addEventListener("click", loadVisits);
+      $("visits-view-month").addEventListener("click", () => setVisitsView("month"));
+      $("visits-view-state").addEventListener("click", () => setVisitsView("state"));
+      $("visits-month").addEventListener("change", loadVisitsByState);
+      $("visits-state-csv").addEventListener("click", () => {
+        const m = $("visits-month").value;
+        saveCsv(["State", "Code", "Visits", "Unique visitors"],
+          visitsStateRows.map((r) => [stateLabel(r.region), r.region, r.visits, r.unique]),
+          "jackson-visits-by-state" + (m ? "-" + m.slice(0, 7) : ""));
+      });
 
       // ——— Team ———
       async function loadTeam() {
